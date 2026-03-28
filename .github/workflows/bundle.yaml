@@ -1,0 +1,67 @@
+name: bundle
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - dist/**
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure Simplified Chinese locale
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y locales
+          sudo locale-gen zh_CN.UTF-8
+          sudo update-locale LANG=zh_CN.UTF-8 LC_ALL=zh_CN.UTF-8 LANGUAGE=zh_CN:zh
+
+          {
+            echo "LANG=zh_CN.UTF-8"
+            echo "LC_ALL=zh_CN.UTF-8"
+            echo "LANGUAGE=zh_CN:zh"
+            echo "TZ=Asia/Shanghai"
+          } >> "$GITHUB_ENV"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build extension bundle
+        run: npm run build
+
+      - name: Commit bundled files
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -Af dist
+
+          if git diff --cached --quiet; then
+            echo "No bundled changes to commit."
+            exit 0
+          fi
+
+          git commit -m "[bot] Bundle"
+          git push
