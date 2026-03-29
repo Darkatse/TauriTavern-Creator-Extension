@@ -67,7 +67,11 @@ async function mountFloatingApp() {
 
     const runtime = await createCreatorApp(host, { settings, i18n: i18n! });
     if (!settings.state.enabled) {
-        await runtime.registry.deactivateAllFeatures();
+        try {
+            await runtime.registry.deactivateAllFeatures();
+        } finally {
+            runtime.layout.dispose();
+        }
         return;
     }
 
@@ -86,7 +90,11 @@ async function unmountFloatingApp() {
     creatorApp = null;
 
     if (runtime) {
-        await runtime.registry.deactivateAllFeatures();
+        try {
+            await runtime.registry.deactivateAllFeatures();
+        } finally {
+            runtime.layout.dispose();
+        }
     }
 
     floatingApp?.unmount();

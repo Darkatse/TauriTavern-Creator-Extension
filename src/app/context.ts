@@ -5,11 +5,13 @@ import type { CreatorShellStore } from './shell-store';
 import type { BubbleFeedBus } from '../shell/bubble/bubble-feed-bus';
 import type { CreatorFeatureRegistry } from '../features/registry';
 import type { I18nContext } from '../i18n';
+import type { CreatorLayoutStore } from './layout-store';
 
 export interface CreatorRuntimeContext {
     host: HostClient;
     settings: CreatorSettingsStore;
     shell: CreatorShellStore;
+    layout: CreatorLayoutStore;
     bubbleBus: BubbleFeedBus;
     i18n: I18nContext;
 }

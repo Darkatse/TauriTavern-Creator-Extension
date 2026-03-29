@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useCreatorApp } from '../../app/context';
 
-const { bubbleBus, settings, shell } = useCreatorApp();
+const { bubbleBus, layout, settings, shell } = useCreatorApp();
 
 const BUBBLE_SIZE = 48;
 const BUBBLE_PADDING = 12;
 const FEED_GAP = 12;
 const FEED_MAX_WIDTH = 360;
 
-const viewport = reactive({
-    width: window.innerWidth,
-    height: window.innerHeight,
-});
-
-const initialPosition = settings.state.bubblePosition ?? {
-    x: viewport.width - 100,
-    y: viewport.height - 100,
+const getDefaultPosition = () => {
+    const frame = layout.state.safeFrame;
+    return {
+        x: Math.max(frame.left + BUBBLE_PADDING, frame.right - BUBBLE_SIZE - BUBBLE_PADDING),
+        y: Math.max(frame.top + BUBBLE_PADDING, frame.bottom - BUBBLE_SIZE - BUBBLE_PADDING),
+    };
 };
+
+const initialPosition = settings.state.bubblePosition ?? getDefaultPosition();
 
 const x = ref(initialPosition.x);
 const y = ref(initialPosition.y);
@@ -30,8 +30,14 @@ let initialX = 0;
 let initialY = 0;
 
 const clampPosition = () => {
-    x.value = Math.max(BUBBLE_PADDING, Math.min(x.value, viewport.width - BUBBLE_SIZE - BUBBLE_PADDING));
-    y.value = Math.max(BUBBLE_PADDING, Math.min(y.value, viewport.height - BUBBLE_SIZE - BUBBLE_PADDING));
+    const frame = layout.state.safeFrame;
+    const minX = frame.left + BUBBLE_PADDING;
+    const maxX = Math.max(minX, frame.right - BUBBLE_SIZE - BUBBLE_PADDING);
+    const minY = frame.top + BUBBLE_PADDING;
+    const maxY = Math.max(minY, frame.bottom - BUBBLE_SIZE - BUBBLE_PADDING);
+
+    x.value = Math.max(minX, Math.min(x.value, maxX));
+    y.value = Math.max(minY, Math.min(y.value, maxY));
 };
 
 const persistPosition = () => {
@@ -41,12 +47,25 @@ const persistPosition = () => {
     });
 };
 
-const handleResize = () => {
-    viewport.width = window.innerWidth;
-    viewport.height = window.innerHeight;
-    clampPosition();
-    persistPosition();
-};
+watch(
+    () => [
+        layout.state.safeFrame.left,
+        layout.state.safeFrame.top,
+        layout.state.safeFrame.right,
+        layout.state.safeFrame.bottom,
+    ],
+    () => {
+        if (!settings.state.bubblePosition) {
+            const nextPosition = getDefaultPosition();
+            x.value = nextPosition.x;
+            y.value = nextPosition.y;
+            return;
+        }
+
+        clampPosition();
+    },
+    { immediate: true },
+);
 
 const handleFeedClick = (tabId?: string) => {
     if (!tabId) {
@@ -57,24 +76,43 @@ const handleFeedClick = (tabId?: string) => {
 };
 
 const feedLayout = computed(() => {
-    const maxWidth = Math.min(FEED_MAX_WIDTH, viewport.width - BUBBLE_PADDING * 2);
-    const left = Math.min(
-        Math.max(x.value - maxWidth + BUBBLE_SIZE - 6, BUBBLE_PADDING),
-        viewport.width - maxWidth - BUBBLE_PADDING,
+    const viewportFrame = layout.state.viewportFrame;
+    const safeFrame = layout.state.safeFrame;
+    const maxWidth = Math.min(
+        FEED_MAX_WIDTH,
+        Math.max(0, safeFrame.width - BUBBLE_PADDING * 2),
     );
-    const availableAbove = Math.max(y.value - FEED_GAP - BUBBLE_PADDING, 0);
+    const minLeft = safeFrame.left + BUBBLE_PADDING;
+    const maxLeft = Math.max(minLeft, safeFrame.right - maxWidth - BUBBLE_PADDING);
+    const left = Math.min(
+        Math.max(x.value - maxWidth + BUBBLE_SIZE - 6, minLeft),
+        maxLeft,
+    );
+    const availableAbove = Math.max(
+        y.value - FEED_GAP - (safeFrame.top + BUBBLE_PADDING),
+        0,
+    );
     const availableBelow = Math.max(
-        viewport.height - (y.value + BUBBLE_SIZE + FEED_GAP + BUBBLE_PADDING),
+        safeFrame.bottom - (y.value + BUBBLE_SIZE + FEED_GAP + BUBBLE_PADDING),
         0,
     );
     const useAbove = availableAbove >= 140 || availableAbove >= availableBelow;
+
+    if (maxWidth <= 0) {
+        return {
+            className: 'below',
+            style: {
+                display: 'none',
+            },
+        };
+    }
 
     return {
         className: useAbove ? 'above' : 'below',
         style: useAbove
             ? {
                 left: `${left}px`,
-                bottom: `${viewport.height - y.value + FEED_GAP}px`,
+                bottom: `${Math.max(0, viewportFrame.bottom - y.value + FEED_GAP)}px`,
                 maxWidth: `${maxWidth}px`,
                 maxHeight: `${availableAbove}px`,
             }
@@ -122,16 +160,6 @@ const onPointerUp = (event: PointerEvent) => {
         shell.togglePanel();
     }
 };
-
-onMounted(() => {
-    clampPosition();
-    persistPosition();
-    window.addEventListener('resize', handleResize);
-});
-
-onUnmounted(() => {
-    window.removeEventListener('resize', handleResize);
-});
 </script>
 
 <template>

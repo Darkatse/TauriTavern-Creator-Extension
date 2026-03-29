@@ -5,6 +5,7 @@ import { createSettingsStore, type CreatorSettingsStore } from './settings-store
 import { createBubbleFeedBus } from '../shell/bubble/bubble-feed-bus';
 import { createI18n, type I18nContext } from '../i18n';
 import type { CreatorAppContext } from './context';
+import { createLayoutStore } from './layout-store';
 
 interface CreatorAppOptions {
     settings?: CreatorSettingsStore;
@@ -17,6 +18,7 @@ export async function createCreatorApp(
 ): Promise<CreatorAppContext> {
     const settings = options.settings ?? createSettingsStore();
     const i18n = options.i18n ?? createI18n();
+    const layout = createLayoutStore();
     const bubbleBus = createBubbleFeedBus();
     const shell = createShellStore(settings, bubbleBus);
 
@@ -24,6 +26,7 @@ export async function createCreatorApp(
         host,
         settings,
         shell,
+        layout,
         bubbleBus,
         i18n,
     };
@@ -37,4 +40,3 @@ export async function createCreatorApp(
         registry,
     };
 }
-

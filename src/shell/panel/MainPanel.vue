@@ -100,18 +100,25 @@ const setTab = (id: string) => {
 <style scoped>
 .main-panel-backdrop {
     position: fixed;
-    inset: 0;
+    top: var(--ttce-viewport-top, 0px);
+    left: var(--ttce-viewport-left, 0px);
+    width: var(--ttce-viewport-width, 100vw);
+    height: var(--ttce-viewport-height, 100vh);
     z-index: 99998; /* Just below bubble */
     background: var(--ttce-backdrop);
     display: flex;
     justify-content: center;
     align-items: center;
+    padding-top: var(--ttce-safe-inset-top, 0px);
+    padding-right: var(--ttce-safe-inset-right, 0px);
+    padding-bottom: var(--ttce-safe-inset-bottom, 0px);
+    padding-left: var(--ttce-safe-inset-left, 0px);
     backdrop-filter: blur(2px);
 }
 
 .main-panel-window {
-    width: min(96vw, 1360px);
-    height: min(94vh, 1040px);
+    width: min(96%, 1360px);
+    height: min(94%, 1040px);
     background: var(--ttce-bg-1);
     border: 1px solid var(--ttce-border);
     border-radius: 8px;
@@ -243,8 +250,8 @@ const setTab = (id: string) => {
 
 @media (max-width: 768px) {
     .main-panel-window {
-        width: 100vw;
-        height: 100vh;
+        width: 100%;
+        height: 100%;
         max-width: none;
         border-radius: 0;
         flex-direction: column;
