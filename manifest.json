@@ -1,7 +1,7 @@
 {
   "display_name": "TauriTavern Creator Extension",
   "author": "Darkatse",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "js": "dist/index.js",
   "css": "dist/style.css",
   "homePage": "https://github.com/Darkatse/TauriTavern-Creator-Extension",
