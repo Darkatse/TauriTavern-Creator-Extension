@@ -30,6 +30,7 @@
 
 ```ts
 type HostCapability =
+  | 'layout'
   | 'chat'
   | 'dev.frontendLogs'
   | 'dev.backendLogs'
@@ -42,6 +43,18 @@ type HostCapability =
 ---
 
 ## 各功能模块的 API 使用情况
+
+### 布局契约（Layout）
+
+**所需能力:** `layout`
+
+Creator Extension 的 UI（悬浮气泡、全屏面板）需要稳定消费移动端 safe-area / viewport / Android IME 语义。
+本模板不再自行测量/监听，而是直接订阅宿主 ABI：
+
+| API | 用途 |
+|-----|---------|
+| `api.layout.snapshot()` | 读取当前 `safeInsets / safeFrame / viewport` |
+| `api.layout.subscribe(cb)` | 订阅布局变更（包含 IME 路由变化） |
 
 ### 世界书监视器 (World Book Monitor)
 

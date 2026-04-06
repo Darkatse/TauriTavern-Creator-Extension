@@ -285,17 +285,24 @@ const emitFeatureToggle = (featureId: string, event: Event) => {
 }
 
 @media (max-width: 760px) {
-    .settings-card,
-    .appearance-card {
+    .settings-card {
         align-items: flex-start;
     }
 
+    .appearance-card {
+        align-items: center;
+    }
+
     .appearance-toggle {
-        width: 100%;
+        padding: 3px;
+        gap: 4px;
     }
 
     .appearance-option {
-        flex: 1 1 0;
+        min-width: 64px;
+        padding: 6px 10px;
+        font-size: 13px;
+        flex: 0 0 auto;
     }
 }
 </style>

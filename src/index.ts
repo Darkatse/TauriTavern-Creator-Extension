@@ -70,7 +70,7 @@ async function mountFloatingApp() {
         try {
             await runtime.registry.deactivateAllFeatures();
         } finally {
-            runtime.layout.dispose();
+            await runtime.layout.dispose();
         }
         return;
     }
@@ -93,7 +93,7 @@ async function unmountFloatingApp() {
         try {
             await runtime.registry.deactivateAllFeatures();
         } finally {
-            runtime.layout.dispose();
+            await runtime.layout.dispose();
         }
     }
 

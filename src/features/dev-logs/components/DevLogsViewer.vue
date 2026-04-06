@@ -301,6 +301,8 @@ const updateCapture = async (event: Event) => {
     border-radius: 8px;
     background: var(--ttce-bg-code);
     overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     font-family: var(--ttce-font-mono);
 }
 

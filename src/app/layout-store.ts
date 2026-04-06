@@ -1,4 +1,5 @@
 import { reactive } from 'vue';
+import type { LayoutSnapshot, TauriTavernLayoutApi } from '../host/api';
 
 export interface CreatorLayoutInsets {
     top: number;
@@ -24,34 +25,45 @@ export interface CreatorLayoutStore {
         safeFrame: CreatorLayoutFrame;
     };
     refresh(): void;
-    dispose(): void;
+    dispose(): Promise<void>;
 }
 
 const COMPACT_BREAKPOINT = 768;
 
-function createInsets(): CreatorLayoutInsets {
+/**
+ * This extension intentionally does NOT re-implement viewport/safe-area/IME measurement.
+ *
+ * TauriTavern's host kernel already publishes a stable layout ABI that:
+ * - normalizes safe-area across iOS/Android WebViews
+ * - preserves Android IME as a surface-local contract (no viewport-resize double-meaning)
+ * - avoids "observer soup" inside extensions
+ *
+ * We dogfood that ABI here: the Creator Extension reads `api.layout` snapshots and exposes a small
+ * reactive store for Vue components.
+ */
+
+function createInsets(top = 0, right = 0, bottom = 0, left = 0): CreatorLayoutInsets {
     return {
-        top: 0,
-        right: 0,
-        bottom: 0,
-        left: 0,
+        top: Math.max(0, top),
+        right: Math.max(0, right),
+        bottom: Math.max(0, bottom),
+        left: Math.max(0, left),
     };
 }
 
-function createFrame(): CreatorLayoutFrame {
+function createFrame(left = 0, top = 0, width = 0, height = 0): CreatorLayoutFrame {
+    const safeLeft = Math.max(0, left);
+    const safeTop = Math.max(0, top);
+    const safeWidth = Math.max(0, width);
+    const safeHeight = Math.max(0, height);
     return {
-        left: 0,
-        top: 0,
-        width: 0,
-        height: 0,
-        right: 0,
-        bottom: 0,
+        left: safeLeft,
+        top: safeTop,
+        width: safeWidth,
+        height: safeHeight,
+        right: safeLeft + safeWidth,
+        bottom: safeTop + safeHeight,
     };
-}
-
-function parsePixelValue(value: string) {
-    const parsed = Number.parseFloat(String(value || '').trim());
-    return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function updateFrame(frame: CreatorLayoutFrame, left: number, top: number, width: number, height: number) {
@@ -63,58 +75,23 @@ function updateFrame(frame: CreatorLayoutFrame, left: number, top: number, width
     frame.bottom = frame.top + frame.height;
 }
 
-function createInsetProbe() {
-    const probe = document.createElement('div');
-    probe.setAttribute('aria-hidden', 'true');
-    probe.style.position = 'fixed';
-    probe.style.inset = '0';
-    probe.style.visibility = 'hidden';
-    probe.style.pointerEvents = 'none';
-    probe.style.zIndex = '-1';
-    probe.style.paddingTop = 'var(--tt-inset-top, env(safe-area-inset-top, 0px))';
-    probe.style.paddingRight = 'var(--tt-inset-right, env(safe-area-inset-right, 0px))';
-    probe.style.paddingBottom = 'var(--tt-inset-bottom, env(safe-area-inset-bottom, 0px))';
-    probe.style.paddingLeft = 'var(--tt-inset-left, env(safe-area-inset-left, 0px))';
-    return probe;
+function applySnapshot(state: CreatorLayoutStore['state'], snapshot: LayoutSnapshot) {
+    const safeInsets = snapshot.safeInsets ?? createInsets();
+    state.safeInsets.top = safeInsets.top;
+    state.safeInsets.right = safeInsets.right;
+    state.safeInsets.bottom = safeInsets.bottom;
+    state.safeInsets.left = safeInsets.left;
+
+    const viewport = snapshot.viewport ?? createFrame();
+    updateFrame(state.viewportFrame, viewport.left, viewport.top, viewport.width, viewport.height);
+
+    const safeFrame = snapshot.safeFrame ?? createFrame();
+    updateFrame(state.safeFrame, safeFrame.left, safeFrame.top, safeFrame.width, safeFrame.height);
+
+    state.compact = state.safeFrame.width <= COMPACT_BREAKPOINT;
 }
 
-function measureInsets(probe: HTMLElement): CreatorLayoutInsets {
-    const computedStyle = window.getComputedStyle(probe);
-    return {
-        top: Math.max(0, parsePixelValue(computedStyle.paddingTop)),
-        right: Math.max(0, parsePixelValue(computedStyle.paddingRight)),
-        bottom: Math.max(0, parsePixelValue(computedStyle.paddingBottom)),
-        left: Math.max(0, parsePixelValue(computedStyle.paddingLeft)),
-    };
-}
-
-function getViewportRect() {
-    const visualViewport = window.visualViewport;
-    const width = Number.isFinite(visualViewport?.width) && visualViewport
-        ? visualViewport.width
-        : window.innerWidth;
-    const height = Number.isFinite(visualViewport?.height) && visualViewport
-        ? visualViewport.height
-        : window.innerHeight;
-    const left = Number.isFinite(visualViewport?.offsetLeft) && visualViewport
-        ? visualViewport.offsetLeft
-        : 0;
-    const top = Number.isFinite(visualViewport?.offsetTop) && visualViewport
-        ? visualViewport.offsetTop
-        : 0;
-
-    return {
-        left: Math.max(0, left),
-        top: Math.max(0, top),
-        width: Math.max(0, width),
-        height: Math.max(0, height),
-    };
-}
-
-export function createLayoutStore(): CreatorLayoutStore {
-    const insetProbe = createInsetProbe();
-    document.body.appendChild(insetProbe);
-
+export async function createLayoutStore(layoutApi: TauriTavernLayoutApi): Promise<CreatorLayoutStore> {
     const state = reactive({
         compact: false,
         safeInsets: createInsets(),
@@ -122,78 +99,34 @@ export function createLayoutStore(): CreatorLayoutStore {
         safeFrame: createFrame(),
     });
 
+    let unsubscribe: (() => void | Promise<void>) | null = null;
     let disposed = false;
-    let refreshQueued = false;
 
     const refresh = () => {
         if (disposed) {
-            return;
+            throw new Error('Layout store is disposed.');
         }
 
-        const viewportRect = getViewportRect();
-        const safeInsets = measureInsets(insetProbe);
-
-        state.safeInsets.top = safeInsets.top;
-        state.safeInsets.right = safeInsets.right;
-        state.safeInsets.bottom = safeInsets.bottom;
-        state.safeInsets.left = safeInsets.left;
-
-        updateFrame(
-            state.viewportFrame,
-            viewportRect.left,
-            viewportRect.top,
-            viewportRect.width,
-            viewportRect.height,
-        );
-
-        updateFrame(
-            state.safeFrame,
-            viewportRect.left + safeInsets.left,
-            viewportRect.top + safeInsets.top,
-            viewportRect.width - safeInsets.left - safeInsets.right,
-            viewportRect.height - safeInsets.top - safeInsets.bottom,
-        );
-
-        state.compact = state.safeFrame.width <= COMPACT_BREAKPOINT;
+        applySnapshot(state, layoutApi.snapshot());
     };
-
-    const queueRefresh = () => {
-        if (refreshQueued || disposed) {
-            return;
-        }
-
-        refreshQueued = true;
-        requestAnimationFrame(() => {
-            refreshQueued = false;
-            refresh();
-        });
-    };
-
-    const rootObserver = new MutationObserver(queueRefresh);
-    rootObserver.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ['style', 'class'],
-    });
-
-    window.addEventListener('resize', queueRefresh, { passive: true });
-    window.addEventListener('orientationchange', queueRefresh, { passive: true });
-    window.visualViewport?.addEventListener('resize', queueRefresh, { passive: true });
-    window.visualViewport?.addEventListener('scroll', queueRefresh, { passive: true });
 
     refresh();
-    queueRefresh();
+
+    // Single subscription is enough: the host is responsible for normalizing the event sources
+    // (safe-area changes, viewport changes, and Android IME routing).
+    unsubscribe = await layoutApi.subscribe((snapshot) => {
+        if (disposed) {
+            return;
+        }
+        applySnapshot(state, snapshot);
+    });
 
     return {
         state,
         refresh,
-        dispose() {
+        async dispose() {
             disposed = true;
-            rootObserver.disconnect();
-            window.removeEventListener('resize', queueRefresh);
-            window.removeEventListener('orientationchange', queueRefresh);
-            window.visualViewport?.removeEventListener('resize', queueRefresh);
-            window.visualViewport?.removeEventListener('scroll', queueRefresh);
-            insetProbe.remove();
+            await unsubscribe?.();
         },
     };
 }

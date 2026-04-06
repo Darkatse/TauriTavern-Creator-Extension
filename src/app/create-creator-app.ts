@@ -18,7 +18,10 @@ export async function createCreatorApp(
 ): Promise<CreatorAppContext> {
     const settings = options.settings ?? createSettingsStore();
     const i18n = options.i18n ?? createI18n();
-    const layout = createLayoutStore();
+    if (!host.api.layout) {
+        throw new Error('Host layout API is unavailable.');
+    }
+    const layout = await createLayoutStore(host.api.layout);
     const bubbleBus = createBubbleFeedBus();
     const shell = createShellStore(settings, bubbleBus);
 

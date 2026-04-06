@@ -3443,7 +3443,7 @@ var ws = ["onClick"], Ts = { class: "feed-text" }, Es = { class: "feed-title-row
 			}, null, 40, rc)]))), 128))])]))), 128))])
 		]));
 	}
-}), [["__scopeId", "data-v-81f23923"]]), ac = /* @__PURE__ */ fr({
+}), [["__scopeId", "data-v-e8b37939"]]), ac = /* @__PURE__ */ fr({
 	__name: "ExtensionSettings",
 	setup(e) {
 		let { registry: t, settings: n, i18n: r } = Cs(), i = r.t.bind(r), a = Z(() => t.features.map((e) => ({
@@ -3536,7 +3536,7 @@ var ws = ["onClick"], Ts = { class: "feed-text" }, Es = { class: "feed-title-row
 			onClick: t[1] ||= (e) => I(n).closePanel()
 		}, "✕")]), q("div", hc, [s.value === "settings" ? (G(), K("div", gc, [J(ac)])) : c.value ? (G(), K("div", _c, [(G(), aa(Rr(c.value.component), { controller: c.value.controller }, null, 8, ["controller"]))])) : Y("", !0)])])])]));
 	}
-}), [["__scopeId", "data-v-a5caa2ca"]]), yc = /* @__PURE__ */ fr({
+}), [["__scopeId", "data-v-2711985d"]]), yc = /* @__PURE__ */ fr({
 	__name: "App",
 	setup(e) {
 		let { layout: t, shell: n } = Cs(), r = Z(() => n.state.panelOpen), i = Z(() => ({
@@ -4346,7 +4346,7 @@ var Tl = {
 			]), q("div", Gl, A(e.message), 1)], 2))), 128))])) : (G(), K("div", Kl, A(u.value.length ? I(o)("devLogs.emptyFiltered") : I(o)("devLogs.emptyNone")), 1))])
 		]));
 	}
-}), [["__scopeId", "data-v-7ec6d47d"]]), Jl = "dev-logs-tools";
+}), [["__scopeId", "data-v-fe4ec4d2"]]), Jl = "dev-logs-tools";
 function Yl(e) {
 	let t = /* @__PURE__ */ Ft({
 		frontendLogs: [],
@@ -5078,85 +5078,62 @@ function od() {
 //#endregion
 //#region src/app/layout-store.ts
 var sd = 768;
-function cd() {
+function cd(e = 0, t = 0, n = 0, r = 0) {
 	return {
-		top: 0,
-		right: 0,
-		bottom: 0,
-		left: 0
+		top: Math.max(0, e),
+		right: Math.max(0, t),
+		bottom: Math.max(0, n),
+		left: Math.max(0, r)
 	};
 }
-function ld() {
+function ld(e = 0, t = 0, n = 0, r = 0) {
+	let i = Math.max(0, e), a = Math.max(0, t), o = Math.max(0, n), s = Math.max(0, r);
 	return {
-		left: 0,
-		top: 0,
-		width: 0,
-		height: 0,
-		right: 0,
-		bottom: 0
+		left: i,
+		top: a,
+		width: o,
+		height: s,
+		right: i + o,
+		bottom: a + s
 	};
 }
-function ud(e) {
-	let t = Number.parseFloat(String(e || "").trim());
-	return Number.isFinite(t) ? t : 0;
-}
-function dd(e, t, n, r, i) {
+function ud(e, t, n, r, i) {
 	e.left = Math.max(0, t), e.top = Math.max(0, n), e.width = Math.max(0, r), e.height = Math.max(0, i), e.right = e.left + e.width, e.bottom = e.top + e.height;
 }
-function fd() {
-	let e = document.createElement("div");
-	return e.setAttribute("aria-hidden", "true"), e.style.position = "fixed", e.style.inset = "0", e.style.visibility = "hidden", e.style.pointerEvents = "none", e.style.zIndex = "-1", e.style.paddingTop = "var(--tt-inset-top, env(safe-area-inset-top, 0px))", e.style.paddingRight = "var(--tt-inset-right, env(safe-area-inset-right, 0px))", e.style.paddingBottom = "var(--tt-inset-bottom, env(safe-area-inset-bottom, 0px))", e.style.paddingLeft = "var(--tt-inset-left, env(safe-area-inset-left, 0px))", e;
+function dd(e, t) {
+	let n = t.safeInsets ?? cd();
+	e.safeInsets.top = n.top, e.safeInsets.right = n.right, e.safeInsets.bottom = n.bottom, e.safeInsets.left = n.left;
+	let r = t.viewport ?? ld();
+	ud(e.viewportFrame, r.left, r.top, r.width, r.height);
+	let i = t.safeFrame ?? ld();
+	ud(e.safeFrame, i.left, i.top, i.width, i.height), e.compact = e.safeFrame.width <= sd;
 }
-function pd(e) {
-	let t = window.getComputedStyle(e);
-	return {
-		top: Math.max(0, ud(t.paddingTop)),
-		right: Math.max(0, ud(t.paddingRight)),
-		bottom: Math.max(0, ud(t.paddingBottom)),
-		left: Math.max(0, ud(t.paddingLeft))
-	};
-}
-function md() {
-	let e = window.visualViewport, t = Number.isFinite(e?.width) && e ? e.width : window.innerWidth, n = Number.isFinite(e?.height) && e ? e.height : window.innerHeight, r = Number.isFinite(e?.offsetLeft) && e ? e.offsetLeft : 0, i = Number.isFinite(e?.offsetTop) && e ? e.offsetTop : 0;
-	return {
-		left: Math.max(0, r),
-		top: Math.max(0, i),
-		width: Math.max(0, t),
-		height: Math.max(0, n)
-	};
-}
-function hd() {
-	let e = fd();
-	document.body.appendChild(e);
+async function fd(e) {
 	let t = /* @__PURE__ */ Ft({
 		compact: !1,
 		safeInsets: cd(),
 		viewportFrame: ld(),
 		safeFrame: ld()
-	}), n = !1, r = !1, i = () => {
-		if (n) return;
-		let r = md(), i = pd(e);
-		t.safeInsets.top = i.top, t.safeInsets.right = i.right, t.safeInsets.bottom = i.bottom, t.safeInsets.left = i.left, dd(t.viewportFrame, r.left, r.top, r.width, r.height), dd(t.safeFrame, r.left + i.left, r.top + i.top, r.width - i.left - i.right, r.height - i.top - i.bottom), t.compact = t.safeFrame.width <= sd;
-	}, a = () => {
-		r || n || (r = !0, requestAnimationFrame(() => {
-			r = !1, i();
-		}));
-	}, o = new MutationObserver(a);
-	return o.observe(document.documentElement, {
-		attributes: !0,
-		attributeFilter: ["style", "class"]
-	}), window.addEventListener("resize", a, { passive: !0 }), window.addEventListener("orientationchange", a, { passive: !0 }), window.visualViewport?.addEventListener("resize", a, { passive: !0 }), window.visualViewport?.addEventListener("scroll", a, { passive: !0 }), i(), a(), {
+	}), n = null, r = !1, i = () => {
+		if (r) throw Error("Layout store is disposed.");
+		dd(t, e.snapshot());
+	};
+	return i(), n = await e.subscribe((e) => {
+		r || dd(t, e);
+	}), {
 		state: t,
 		refresh: i,
-		dispose() {
-			n = !0, o.disconnect(), window.removeEventListener("resize", a), window.removeEventListener("orientationchange", a), window.visualViewport?.removeEventListener("resize", a), window.visualViewport?.removeEventListener("scroll", a), e.remove();
+		async dispose() {
+			r = !0, await n?.();
 		}
 	};
 }
 //#endregion
 //#region src/app/create-creator-app.ts
-async function gd(e, t = {}) {
-	let n = t.settings ?? ad(), r = t.i18n ?? Oc(), i = hd(), a = od(), o = {
+async function pd(e, t = {}) {
+	let n = t.settings ?? ad(), r = t.i18n ?? Oc();
+	if (!e.api.layout) throw Error("Host layout API is unavailable.");
+	let i = await fd(e.api.layout), a = od(), o = {
 		host: e,
 		settings: n,
 		shell: ed(n, a),
@@ -5171,22 +5148,22 @@ async function gd(e, t = {}) {
 }
 //#endregion
 //#region src/host/api.ts
-function _d() {
+function md() {
 	return window.__TAURITAVERN__?.api ?? null;
 }
-async function vd() {
+async function hd() {
 	let e = window.__TAURITAVERN__?.ready ?? window.__TAURITAVERN_MAIN_READY__;
 	e && await e;
 }
 //#endregion
 //#region src/host/client.ts
-function yd(e) {
+function gd(e) {
 	let t = /* @__PURE__ */ new Set();
-	return e.chat && t.add("chat"), e.dev?.frontendLogs && t.add("dev.frontendLogs"), e.dev?.backendLogs && t.add("dev.backendLogs"), e.dev?.llmApiLogs && t.add("dev.llmApiLogs"), e.worldInfo && t.add("worldInfo"), t;
+	return e.layout && t.add("layout"), e.chat && t.add("chat"), e.dev?.frontendLogs && t.add("dev.frontendLogs"), e.dev?.backendLogs && t.add("dev.backendLogs"), e.dev?.llmApiLogs && t.add("dev.llmApiLogs"), e.worldInfo && t.add("worldInfo"), t;
 }
-function bd(e = _d()) {
+function _d(e = md()) {
 	if (!e) throw Error("TauriTavern host API is unavailable.");
-	let t = yd(e);
+	let t = gd(e);
 	return {
 		api: e,
 		capabilities: t,
@@ -5208,7 +5185,7 @@ function bd(e = _d()) {
 }
 //#endregion
 //#region src/settings-page/ExtensionsPagePanel.vue?vue&type=script&setup=true&lang.ts
-var xd = { class: "inline-drawer wide100p ttce-settings-drawer" }, Sd = { class: "inline-drawer-content" }, Cd = ["data-ttce-appearance"], wd = /* @__PURE__ */ Is(/* @__PURE__ */ fr({
+var vd = { class: "inline-drawer wide100p ttce-settings-drawer" }, yd = { class: "inline-drawer-content" }, bd = ["data-ttce-appearance"], xd = /* @__PURE__ */ Is(/* @__PURE__ */ fr({
 	__name: "ExtensionsPagePanel",
 	props: {
 		settings: {},
@@ -5229,7 +5206,7 @@ var xd = { class: "inline-drawer wide100p ttce-settings-drawer" }, Sd = { class:
 		}, s = async ({ id: e, enabled: n }) => {
 			await t.setFeatureEnabled(e, n);
 		};
-		return (e, c) => (G(), K("div", xd, [c[1] ||= q("div", { class: "inline-drawer-toggle inline-drawer-header" }, [q("div", { class: "ttce-settings-header" }, [q("i", { class: "fa-solid fa-code" }), q("b", null, "TauriTavern Creator Extension")]), q("div", { class: "inline-drawer-icon fa-solid fa-circle-chevron-down down" })], -1), q("div", Sd, [q("div", {
+		return (e, c) => (G(), K("div", vd, [c[1] ||= q("div", { class: "inline-drawer-toggle inline-drawer-header" }, [q("div", { class: "ttce-settings-header" }, [q("i", { class: "fa-solid fa-code" }), q("b", null, "TauriTavern Creator Extension")]), q("div", { class: "inline-drawer-icon fa-solid fa-circle-chevron-down down" })], -1), q("div", yd, [q("div", {
 			class: "ttce-theme-root ttce-settings-surface",
 			"data-ttce-appearance": t.settings.state.appearanceMode
 		}, [J(ic, {
@@ -5249,105 +5226,105 @@ var xd = { class: "inline-drawer wide100p ttce-settings-drawer" }, Sd = { class:
 			"appearance-mode",
 			"features",
 			"i18n"
-		])], 8, Cd)])]));
+		])], 8, bd)])]));
 	}
-}), [["__scopeId", "data-v-254ee4fb"]]), Td = "tauritavern-creator-extension-root", Ed = "tauritavern-creator-extension-settings-root", Dd = "ttce-theme-root", Od = null, kd = null, Ad = null, jd = null, Md = null, Nd = null, $ = null, Pd = null, Fd = [], Id = null, Ld = Promise.resolve();
-function Rd() {
+}), [["__scopeId", "data-v-254ee4fb"]]), Sd = "tauritavern-creator-extension-root", Cd = "tauritavern-creator-extension-settings-root", wd = "ttce-theme-root", Td = null, Ed = null, Dd = null, Od = null, kd = null, Ad = null, $ = null, jd = null, Md = [], Nd = null, Pd = Promise.resolve();
+function Fd() {
 	return document.readyState === "loading" ? new Promise((e) => {
 		document.addEventListener("DOMContentLoaded", () => e(), { once: !0 });
 	}) : Promise.resolve();
 }
-function zd(e, t, n) {
+function Id(e, t, n) {
 	document.getElementById(e)?.remove();
 	let r = document.createElement("div");
 	return r.id = e, r.className = n, t.appendChild(r), r;
 }
-function Bd() {
+function Ld() {
 	return document.getElementById("extensions_settings2") ?? document.getElementById("extensions_settings");
 }
-function Vd() {
-	!kd || !$ || (kd.dataset.ttceAppearance = $.state.appearanceMode);
+function Rd() {
+	!Ed || !$ || (Ed.dataset.ttceAppearance = $.state.appearanceMode);
 }
-async function Hd() {
-	if (Od || !Nd || !$ || !$.state.enabled) return;
-	let e = await gd(Nd, {
+async function zd() {
+	if (Td || !Ad || !$ || !$.state.enabled) return;
+	let e = await pd(Ad, {
 		settings: $,
-		i18n: Pd
+		i18n: jd
 	});
 	if (!$.state.enabled) {
 		try {
 			await e.registry.deactivateAllFeatures();
 		} finally {
-			e.layout.dispose();
+			await e.layout.dispose();
 		}
 		return;
 	}
-	Md = e, kd = zd(Td, document.body, Dd), Vd(), Od = ys(yc), Od.provide(Ss, e), Od.provide(kc, e.i18n), Od.mount(kd);
+	kd = e, Ed = Id(Sd, document.body, wd), Rd(), Td = ys(yc), Td.provide(Ss, e), Td.provide(kc, e.i18n), Td.mount(Ed);
 }
-async function Ud() {
-	let e = Md;
-	if (Md = null, e) try {
+async function Bd() {
+	let e = kd;
+	if (kd = null, e) try {
 		await e.registry.deactivateAllFeatures();
 	} finally {
-		e.layout.dispose();
+		await e.layout.dispose();
 	}
-	Od?.unmount(), Od = null, kd?.remove(), kd = null;
+	Td?.unmount(), Td = null, Ed?.remove(), Ed = null;
 }
-async function Wd() {
+async function Vd() {
 	if ($) {
 		if ($.state.enabled) {
-			await Hd(), Vd();
+			await zd(), Rd();
 			return;
 		}
-		await Ud();
+		await Bd();
 	}
 }
-function Gd() {
-	return Ld = Ld.catch((e) => {
+function Hd() {
+	return Pd = Pd.catch((e) => {
 		console.error("[TauriTavern Creator Extension] Runtime lifecycle sync failed.", e);
-	}).then(() => Wd()), Ld;
+	}).then(() => Vd()), Pd;
 }
-function Kd() {
-	if (Ad || !$) return;
-	let e = Bd();
+function Ud() {
+	if (Dd || !$) return;
+	let e = Ld();
 	if (!e) {
 		console.warn("[TauriTavern Creator Extension] Extensions settings container is unavailable.");
 		return;
 	}
-	jd = zd(Ed, e, "extension_container");
-	let t = Pd ?? Oc();
-	Ad = ys(wd, {
+	Od = Id(Cd, e, "extension_container");
+	let t = jd ?? Oc();
+	Dd = ys(xd, {
 		settings: $,
-		features: Fd,
+		features: Md,
 		setFeatureEnabled: async (e, t) => {
-			if (Md) {
-				await Md.registry.setFeatureEnabled(e, t);
+			if (kd) {
+				await kd.registry.setFeatureEnabled(e, t);
 				return;
 			}
 			$?.setFeatureEnabled(e, t);
 		}
-	}), Ad.provide(kc, t), Ad.mount(jd);
+	}), Dd.provide(kc, t), Dd.mount(Od);
 }
-function qd() {
-	Ad?.unmount(), Ad = null, jd?.remove(), jd = null;
+function Wd() {
+	Dd?.unmount(), Dd = null, Od?.remove(), Od = null;
 }
-function Jd() {
-	Id?.(), Id = null, Ld.finally(() => {
-		Ud(), qd();
+function Gd() {
+	Nd?.(), Nd = null, Pd.finally(() => {
+		Bd(), Wd();
 	});
 }
-async function Yd() {
-	await Rd(), await vd();
-	let e = _d();
+async function Kd() {
+	await Fd(), await hd();
+	let e = md();
 	if (!e) {
 		console.error("[TauriTavern Creator Extension] Host API is unavailable.");
 		return;
 	}
-	Nd = bd(e), $ = ad(), Pd = Oc(), Fd = Qu(Nd), Kd(), Id = $.subscribe(() => {
-		Gd();
-	}), await Gd(), window.addEventListener("pagehide", Jd, { once: !0 });
+	Ad = _d(e), $ = ad(), jd = Oc(), Md = Qu(Ad), Ud(), Nd = $.subscribe(() => {
+		Hd();
+	}), await Hd(), window.addEventListener("pagehide", Gd, { once: !0 });
 }
-Yd();
+Kd();
 //#endregion
 
 //# sourceMappingURL=index.js.map

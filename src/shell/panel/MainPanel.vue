@@ -124,6 +124,8 @@ const setTab = (id: string) => {
     border-radius: 8px;
     display: flex;
     overflow: hidden;
+    min-height: 0;
+    min-width: 0;
     box-shadow: var(--ttce-shadow-panel);
     color: var(--ttce-text);
     font-family: var(--ttce-font-sans);
@@ -135,6 +137,8 @@ const setTab = (id: string) => {
     border-right: 1px solid var(--ttce-border);
     display: flex;
     flex-direction: column;
+    min-height: 0;
+    min-width: 0;
 }
 
 .sidebar-header {
@@ -153,6 +157,8 @@ const setTab = (id: string) => {
 .sidebar-nav {
     flex: 1;
     overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     padding: 12px 8px;
 }
 
@@ -202,6 +208,8 @@ const setTab = (id: string) => {
     display: flex;
     flex-direction: column;
     background: var(--ttce-bg-1);
+    min-height: 0;
+    min-width: 0;
 }
 
 .content-header {
@@ -246,6 +254,8 @@ const setTab = (id: string) => {
 
 .settings-host {
     overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
 }
 
 @media (max-width: 768px) {

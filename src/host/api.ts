@@ -98,6 +98,46 @@ export interface ChatSearchHit {
     text: string;
 }
 
+export interface LayoutInsets {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+}
+
+export interface LayoutFrame {
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+    right: number;
+    bottom: number;
+}
+
+export type LayoutImeKind = 'composer' | 'fixed-shell' | 'dialog';
+
+export interface LayoutImeSnapshot {
+    activeSurface: Element | null;
+    kind: LayoutImeKind;
+    bottom: number;
+    viewportBottomInset: number;
+    keyboardOffset: number;
+}
+
+export interface LayoutSnapshot {
+    version: number;
+    timestampMs: number;
+    viewport: LayoutFrame;
+    safeInsets: LayoutInsets;
+    safeFrame: LayoutFrame;
+    ime: LayoutImeSnapshot;
+}
+
+export interface TauriTavernLayoutApi {
+    snapshot: () => LayoutSnapshot;
+    subscribe: (handler: (snapshot: LayoutSnapshot) => void) => Promise<HostUnsubscribe>;
+}
+
 export interface TauriTavernChatHandle {
     locate: {
         findLastMessage: (query?: ChatLocateQuery) => Promise<ChatLocateResult | null>;
@@ -115,6 +155,7 @@ export interface TauriTavernChatHandle {
 }
 
 export interface TauriTavernHostApi {
+    layout?: TauriTavernLayoutApi;
     dev?: {
         frontendLogs?: {
             list: (options?: { limit?: number }) => Promise<FrontendLogEntry[]>;
@@ -158,6 +199,7 @@ declare global {
                 dev?: TauriTavernHostApi['dev'];
                 worldInfo?: TauriTavernHostApi['worldInfo'];
                 chat?: TauriTavernHostApi['chat'];
+                layout?: TauriTavernHostApi['layout'];
             }
         };
         __TAURITAVERN_MAIN_READY__?: Promise<void>;

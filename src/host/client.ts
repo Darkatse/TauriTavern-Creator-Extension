@@ -7,6 +7,7 @@ import {
 } from './api';
 
 export type HostCapability =
+    | 'layout'
     | 'chat'
     | 'dev.frontendLogs'
     | 'dev.backendLogs'
@@ -25,6 +26,9 @@ export interface HostClient {
 function collectCapabilities(api: TauriTavernHostApi): Set<HostCapability> {
     const capabilities = new Set<HostCapability>();
 
+    if (api.layout) {
+        capabilities.add('layout');
+    }
     if (api.chat) {
         capabilities.add('chat');
     }
