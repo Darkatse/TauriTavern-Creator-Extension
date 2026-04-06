@@ -91,6 +91,7 @@ onBeforeUnmount(() => {
     display: flex;
     flex-direction: column;
     min-height: 0;
+    min-width: 0;
     overflow: hidden;
 }
 
@@ -148,7 +149,10 @@ onBeforeUnmount(() => {
     min-height: 0;
     padding: 10px 12px;
     white-space: pre-wrap;
+    overflow-wrap: anywhere;
     overflow: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
 }
 
 .text-viewer.raw {
@@ -211,6 +215,8 @@ onBeforeUnmount(() => {
     overflow: auto;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
 }
 
 @media (max-width: 900px) {

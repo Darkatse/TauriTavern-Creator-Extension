@@ -245,6 +245,7 @@ const copyText = async (kind: 'request' | 'response') => {
     gap: 10px;
     flex: 1;
     min-height: 0;
+    min-width: 0;
     color: var(--ttce-text);
 }
 
@@ -335,6 +336,7 @@ const copyText = async (kind: 'request' | 'response') => {
 .viewer-shell {
     flex: 1;
     min-height: 0;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -347,6 +349,7 @@ const copyText = async (kind: 'request' | 'response') => {
     border: 1px solid var(--ttce-border);
     border-radius: 8px;
     background: var(--ttce-bg-1);
+    min-width: 0;
 }
 
 .detail-head {
@@ -387,6 +390,7 @@ const copyText = async (kind: 'request' | 'response') => {
 .body-stack {
     flex: 1;
     min-height: 0;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -396,6 +400,7 @@ const copyText = async (kind: 'request' | 'response') => {
     display: flex;
     flex-direction: column;
     min-height: 0;
+    min-width: 0;
     border: 1px solid var(--ttce-border);
     border-radius: 8px;
     background: var(--ttce-bg-0);
@@ -424,6 +429,13 @@ const copyText = async (kind: 'request' | 'response') => {
 }
 
 @media (max-width: 900px) {
+    .viewer-shell {
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        padding-right: 2px;
+    }
+
     .view-header,
     .viewer-toolbar,
     .detail-title-row {

@@ -300,6 +300,7 @@ const updateCapture = async (event: Event) => {
     border: 1px solid var(--ttce-border);
     border-radius: 8px;
     background: var(--ttce-bg-code);
+    overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
@@ -341,6 +342,7 @@ const updateCapture = async (event: Event) => {
     align-items: center;
     flex-wrap: wrap;
     gap: 7px;
+    min-width: 0;
     color: var(--ttce-text-soft);
     font-size: 11px;
 }
@@ -359,6 +361,9 @@ const updateCapture = async (event: Event) => {
 
 .log-target {
     color: var(--ttce-text-muted);
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow-wrap: anywhere;
 }
 
 .log-message {

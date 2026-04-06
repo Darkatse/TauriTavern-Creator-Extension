@@ -265,6 +265,7 @@ const emitFeatureToggle = (featureId: string, event: Event) => {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    min-width: 0;
 }
 
 .settings-card-copy strong {
@@ -296,13 +297,15 @@ const emitFeatureToggle = (featureId: string, event: Event) => {
     .appearance-toggle {
         padding: 3px;
         gap: 4px;
+        flex: 0 1 160px;
+        min-width: 0;
     }
 
     .appearance-option {
-        min-width: 64px;
-        padding: 6px 10px;
-        font-size: 13px;
-        flex: 0 0 auto;
+        min-width: 0;
+        padding: 6px 8px;
+        font-size: 12px;
+        flex: 1 1 0;
     }
 }
 </style>

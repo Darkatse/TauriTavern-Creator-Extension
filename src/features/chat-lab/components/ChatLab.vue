@@ -568,6 +568,27 @@ async function copyCurrentResult() {
 }
 
 @media (max-width: 960px) {
+    .chatlab-view {
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        padding-right: 2px;
+    }
+
+    .sandbox-container {
+        flex: 0 0 auto;
+        overflow: visible;
+    }
+
+    .results-panel {
+        flex: 0 0 auto;
+        overflow: visible;
+    }
+
+    .results-body {
+        overflow: visible;
+    }
+
     .view-header,
     .results-header {
         flex-direction: column;

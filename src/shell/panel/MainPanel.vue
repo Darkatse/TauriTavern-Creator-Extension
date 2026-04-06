@@ -239,6 +239,7 @@ const setTab = (id: string) => {
 .content-body {
     flex: 1;
     min-height: 0;
+    min-width: 0;
     padding: 14px 16px;
     display: flex;
     flex-direction: column;
@@ -248,6 +249,7 @@ const setTab = (id: string) => {
 .feature-host {
     flex: 1;
     min-height: 0;
+    min-width: 0;
     display: flex;
     overflow: hidden;
 }
@@ -256,6 +258,7 @@ const setTab = (id: string) => {
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
+    min-width: 0;
 }
 
 @media (max-width: 768px) {
@@ -310,6 +313,12 @@ const setTab = (id: string) => {
 
     .content-body {
         padding: 16px;
+    }
+
+    .feature-host {
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
     }
 }
 </style>

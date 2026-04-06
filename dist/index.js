@@ -3443,7 +3443,7 @@ var ws = ["onClick"], Ts = { class: "feed-text" }, Es = { class: "feed-title-row
 			}, null, 40, rc)]))), 128))])]))), 128))])
 		]));
 	}
-}), [["__scopeId", "data-v-e8b37939"]]), ac = /* @__PURE__ */ fr({
+}), [["__scopeId", "data-v-4d670b07"]]), ac = /* @__PURE__ */ fr({
 	__name: "ExtensionSettings",
 	setup(e) {
 		let { registry: t, settings: n, i18n: r } = Cs(), i = r.t.bind(r), a = Z(() => t.features.map((e) => ({
@@ -3536,7 +3536,7 @@ var ws = ["onClick"], Ts = { class: "feed-text" }, Es = { class: "feed-title-row
 			onClick: t[1] ||= (e) => I(n).closePanel()
 		}, "✕")]), q("div", hc, [s.value === "settings" ? (G(), K("div", gc, [J(ac)])) : c.value ? (G(), K("div", _c, [(G(), aa(Rr(c.value.component), { controller: c.value.controller }, null, 8, ["controller"]))])) : Y("", !0)])])])]));
 	}
-}), [["__scopeId", "data-v-2711985d"]]), yc = /* @__PURE__ */ fr({
+}), [["__scopeId", "data-v-daa0480c"]]), yc = /* @__PURE__ */ fr({
 	__name: "App",
 	setup(e) {
 		let { layout: t, shell: n } = Cs(), r = Z(() => n.state.panelOpen), i = Z(() => ({
@@ -4142,7 +4142,7 @@ var jc = { class: "chatlab-view" }, Mc = { class: "view-header" }, Nc = { class:
 			])) : p.value ? (G(), K("article", bl, [q("pre", xl, A(p.value), 1)])) : Y("", !0)]))], 64)) : (G(), K("div", cl, A(I(a)("chatLab.stateEmpty")), 1))])])])
 		]));
 	}
-}), [["__scopeId", "data-v-e7d4c1ac"]]);
+}), [["__scopeId", "data-v-39270e86"]]);
 //#endregion
 //#region src/features/chat-lab/module.ts
 function Cl(e) {
@@ -4346,7 +4346,7 @@ var Tl = {
 			]), q("div", Gl, A(e.message), 1)], 2))), 128))])) : (G(), K("div", Kl, A(u.value.length ? I(o)("devLogs.emptyFiltered") : I(o)("devLogs.emptyNone")), 1))])
 		]));
 	}
-}), [["__scopeId", "data-v-fe4ec4d2"]]), Jl = "dev-logs-tools";
+}), [["__scopeId", "data-v-4670766e"]]), Jl = "dev-logs-tools";
 function Yl(e) {
 	let t = /* @__PURE__ */ Ft({
 		frontendLogs: [],
@@ -4447,7 +4447,7 @@ var Xl = {
 			}, " ✕ ", 8, ru)]), q("pre", { class: k(["viewer-content", { raw: t.raw }]) }, A(t.text), 3)])], 8, eu)) : Y("", !0)]))
 		]));
 	}
-}), [["__scopeId", "data-v-1aa0d9cc"]]), au = { class: "llmapi-view" }, ou = { class: "view-header" }, su = { class: "view-title" }, cu = { class: "view-desc" }, lu = { class: "keep-toolbar" }, uu = { class: "keep-control" }, du = {
+}), [["__scopeId", "data-v-dbf6b9f3"]]), au = { class: "llmapi-view" }, ou = { class: "view-header" }, su = { class: "view-title" }, cu = { class: "view-desc" }, lu = { class: "keep-toolbar" }, uu = { class: "keep-control" }, du = {
 	key: 0,
 	class: "viewer-shell"
 }, fu = { class: "viewer-toolbar" }, pu = { class: "nav-group" }, mu = ["disabled"], hu = ["disabled"], gu = { class: "position-label" }, _u = { class: "action-group" }, vu = { class: "toggle-group" }, yu = { class: "detail-head" }, bu = { class: "detail-title-row" }, xu = { class: "detail-endpoint" }, Su = {
@@ -4591,7 +4591,7 @@ var Xl = {
 			])])
 		])) : (G(), K("div", wu, A(I(i)("llmApi.empty")), 1))]));
 	}
-}), [["__scopeId", "data-v-3cb39889"]]);
+}), [["__scopeId", "data-v-b5f37200"]]);
 //#endregion
 //#region src/features/llm-api/module.ts
 function Eu(e) {
