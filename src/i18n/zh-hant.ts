@@ -14,6 +14,12 @@ export const zhHant: Messages = {
     'settings.area.extensionDev': '偵錯與日誌',
     'settings.area.memoryDev': '聊天記憶',
     'settings.featureCount': '{n} 個工具',
+    'settings.customIcon': '自訂懸浮球圖示',
+    'settings.customIconDesc': '上傳圖片替換預設圖示。上傳動圖將跳過裁剪。',
+    'settings.transparentBg': '隱藏主題底色',
+    'settings.transparentBgDesc': '開啟後，透明圖片將不會透出日夜模式的主題底色。',
+    'settings.uploadIcon': '上傳圖片',
+    'settings.removeIcon': '恢復預設',
 
     // Panel sidebar
     'panel.sidebarTitle': '創作者工具',

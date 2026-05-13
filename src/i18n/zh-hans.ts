@@ -14,6 +14,12 @@ export const zhHans: Messages = {
     'settings.area.extensionDev': '调试与日志',
     'settings.area.memoryDev': '聊天记忆',
     'settings.featureCount': '{n} 个工具',
+    'settings.customIcon': '自定义悬浮球图标',
+    'settings.customIconDesc': '上传图片替换默认图标。上传动图将跳过裁剪。',
+    'settings.transparentBg': '隐藏主题底色',
+    'settings.transparentBgDesc': '开启后，透明图片将不会透出日夜模式的主题底色。',
+    'settings.uploadIcon': '上传图片',
+    'settings.removeIcon': '恢复默认',
 
     // Panel sidebar
     'panel.sidebarTitle': '创作者工具',

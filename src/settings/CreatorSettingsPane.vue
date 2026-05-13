@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+import ImageCropper from '../components/ImageCropper.vue';
 import { creatorAppearanceModes, type CreatorAppearanceMode } from '../app/appearance';
 import type { FeatureArea } from '../features/types';
 import type { CreatorAppearanceOption, CreatorSettingsFeatureItem } from './types';
@@ -10,6 +11,8 @@ const props = defineProps<{
     description: string;
     extensionEnabled: boolean;
     appearanceMode: CreatorAppearanceMode;
+    customBubbleIcon: string | null;
+    customBubbleBgTransparent: boolean;
     features: CreatorSettingsFeatureItem[];
     i18n: I18nContext;
 }>();
@@ -18,6 +21,8 @@ const emit = defineEmits<{
     'toggle-extension': [enabled: boolean];
     'set-appearance': [mode: CreatorAppearanceMode];
     'toggle-feature': [payload: { id: string; enabled: boolean }];
+    'set-custom-icon': [icon: string | null];
+    'set-custom-icon-transparent': [transparent: boolean];
 }>();
 
 const t = computed(() => props.i18n.t.bind(props.i18n));
@@ -63,6 +68,52 @@ const emitFeatureToggle = (featureId: string, event: Event) => {
         id: featureId,
         enabled: (event.target as HTMLInputElement).checked,
     });
+};
+
+const fileInputRef = ref<HTMLInputElement | null>(null);
+const showCropper = ref(false);
+const cropImageUrl = ref('');
+
+const onFileSelected = (e: Event) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    if (file.type === 'image/gif') {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            emit('set-custom-icon', e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+    } else {
+        const url = URL.createObjectURL(file);
+        cropImageUrl.value = url;
+        showCropper.value = true;
+    }
+    
+    if (fileInputRef.value) fileInputRef.value.value = '';
+};
+
+const handleCrop = (base64: string) => {
+    emit('set-custom-icon', base64);
+    showCropper.value = false;
+    URL.revokeObjectURL(cropImageUrl.value);
+};
+
+const handleCropCancel = () => {
+    showCropper.value = false;
+    URL.revokeObjectURL(cropImageUrl.value);
+};
+
+const emitTransparentToggle = (event: Event) => {
+    emit('set-custom-icon-transparent', (event.target as HTMLInputElement).checked);
+};
+
+const triggerFileUpload = () => {
+    fileInputRef.value?.click();
+};
+
+const removeCustomIcon = () => {
+    emit('set-custom-icon', null);
 };
 </script>
 
@@ -110,6 +161,36 @@ const emitFeatureToggle = (featureId: string, event: Event) => {
           </button>
         </div>
       </div>
+
+      <div class="settings-card appearance-card">
+        <div class="settings-card-copy">
+          <strong>{{ t('settings.customIcon') }}</strong>
+          <span>{{ t('settings.customIconDesc') }}</span>
+        </div>
+
+        <div class="custom-icon-actions appearance-toggle">
+          <button type="button" class="appearance-option active" @click="triggerFileUpload">
+            {{ t('settings.uploadIcon') }}
+          </button>
+          <button v-if="props.customBubbleIcon" type="button" class="appearance-option" @click="removeCustomIcon">
+            {{ t('settings.removeIcon') }}
+          </button>
+          <input type="file" ref="fileInputRef" accept="image/*" style="display: none" @change="onFileSelected" />
+        </div>
+      </div>
+
+      <label class="settings-card" v-if="props.customBubbleIcon">
+        <div class="settings-card-copy">
+          <strong>{{ t('settings.transparentBg') }}</strong>
+          <span>{{ t('settings.transparentBgDesc') }}</span>
+        </div>
+        <input
+          type="checkbox"
+          class="settings-toggle"
+          :checked="props.customBubbleBgTransparent"
+          @change="emitTransparentToggle"
+        />
+      </label>
     </section>
 
     <div class="settings-groups">
@@ -135,6 +216,15 @@ const emitFeatureToggle = (featureId: string, event: Event) => {
         </div>
       </section>
     </div>
+
+    <ImageCropper 
+      v-if="showCropper" 
+      :image-url="cropImageUrl" 
+      :i18n="props.i18n" 
+      :appearance-mode="props.appearanceMode"
+      @crop="handleCrop" 
+      @cancel="handleCropCancel" 
+    />
   </div>
 </template>
 

@@ -42,7 +42,7 @@ export function createBubbleFeedBus(): BubbleFeedBus {
             clearTimeout(existing);
         }
 
-        const timer = setTimeout(() => remove(id), 5000);
+        const timer = setTimeout(() => remove(id), 3000);
         removalTimers.set(id, timer);
     };
 

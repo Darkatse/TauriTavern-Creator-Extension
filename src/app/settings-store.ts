@@ -17,6 +17,8 @@ interface CreatorSettingsSnapshot {
     bubblePosition: BubblePosition | null;
     activeTab: string;
     appearanceMode: CreatorAppearanceMode;
+    customBubbleIcon: string | null;
+    customBubbleBgTransparent: boolean;
 }
 
 export interface CreatorSettingsStore {
@@ -28,6 +30,8 @@ export interface CreatorSettingsStore {
     setFeatureEnabled(featureId: string, enabled: boolean): void;
     setBubblePosition(position: BubblePosition): void;
     setActiveTab(tabId: string): void;
+    setCustomBubbleIcon(icon: string | null): void;
+    setCustomBubbleBgTransparent(transparent: boolean): void;
 }
 
 function createDefaultSnapshot(): CreatorSettingsSnapshot {
@@ -37,6 +41,8 @@ function createDefaultSnapshot(): CreatorSettingsSnapshot {
         bubblePosition: null,
         activeTab: 'settings',
         appearanceMode: DEFAULT_APPEARANCE_MODE,
+        customBubbleIcon: null,
+        customBubbleBgTransparent: false,
     };
 }
 
@@ -52,6 +58,8 @@ function readSnapshot(): CreatorSettingsSnapshot {
             ...createDefaultSnapshot(),
             ...snapshot,
             appearanceMode: snapshot.appearanceMode === 'day' ? 'day' : DEFAULT_APPEARANCE_MODE,
+            customBubbleIcon: snapshot.customBubbleIcon ?? null,
+            customBubbleBgTransparent: Boolean(snapshot.customBubbleBgTransparent),
         };
     } catch {
         return createDefaultSnapshot();
@@ -65,6 +73,8 @@ function toSnapshot(state: CreatorSettingsSnapshot): CreatorSettingsSnapshot {
         bubblePosition: state.bubblePosition ? { ...state.bubblePosition } : null,
         activeTab: state.activeTab,
         appearanceMode: state.appearanceMode,
+        customBubbleIcon: state.customBubbleIcon,
+        customBubbleBgTransparent: state.customBubbleBgTransparent,
     };
 }
 
@@ -130,6 +140,22 @@ export function createSettingsStore(): CreatorSettingsStore {
             }
 
             state.activeTab = tabId;
+            notify();
+        },
+        setCustomBubbleIcon(icon) {
+            if (state.customBubbleIcon === icon) {
+                return;
+            }
+
+            state.customBubbleIcon = icon;
+            notify();
+        },
+        setCustomBubbleBgTransparent(transparent) {
+            if (state.customBubbleBgTransparent === transparent) {
+                return;
+            }
+
+            state.customBubbleBgTransparent = transparent;
             notify();
         },
     };

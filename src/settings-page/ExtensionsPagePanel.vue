@@ -34,6 +34,14 @@ const setAppearance = (mode: CreatorAppearanceMode) => {
     props.settings.setAppearanceMode(mode);
 };
 
+const setCustomIcon = (icon: string | null) => {
+    props.settings.setCustomBubbleIcon(icon);
+};
+
+const setCustomIconTransparent = (transparent: boolean) => {
+    props.settings.setCustomBubbleBgTransparent(transparent);
+};
+
 const toggleFeature = async ({ id, enabled }: { id: string; enabled: boolean }) => {
     await props.setFeatureEnabled(id, enabled);
 };
@@ -59,11 +67,15 @@ const toggleFeature = async ({ id, enabled }: { id: string; enabled: boolean }) 
           :description="t('settings.description')"
           :extension-enabled="props.settings.state.enabled"
           :appearance-mode="props.settings.state.appearanceMode"
+          :custom-bubble-icon="props.settings.state.customBubbleIcon"
+          :custom-bubble-bg-transparent="props.settings.state.customBubbleBgTransparent"
           :features="featureItems"
           :i18n="i18n"
           @toggle-extension="toggleExtension"
           @set-appearance="setAppearance"
           @toggle-feature="(payload) => void toggleFeature(payload)"
+          @set-custom-icon="setCustomIcon"
+          @set-custom-icon-transparent="setCustomIconTransparent"
         />
       </div>
     </div>

@@ -1,13 +1,18 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
 import { useCreatorApp } from '../../app/context';
 
 const { bubbleBus, layout, settings, shell } = useCreatorApp();
 
-const BUBBLE_SIZE = 48;
+// 仅在触屏设备（手机/平板）上启用自动吸边，桌面端保持原版行为
+const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+const BUBBLE_SIZE = isTouchDevice ? 40 : 48;
 const BUBBLE_PADDING = 12;
 const FEED_GAP = 12;
 const FEED_MAX_WIDTH = 360;
+const IDLE_TIMEOUT = 1000;
+const DOCK_VISIBLE = 15;
 
 const getDefaultPosition = () => {
     const frame = layout.state.safeFrame;
@@ -22,12 +27,18 @@ const initialPosition = settings.state.bubblePosition ?? getDefaultPosition();
 const x = ref(initialPosition.x);
 const y = ref(initialPosition.y);
 const dragging = ref(false);
+const docked = ref(false);
 const unreadCount = computed(() => bubbleBus.state.unreadCount);
+
+// 吸边前的真实位置
+let realX = x.value;
+let realY = y.value;
 
 let startX = 0;
 let startY = 0;
 let initialX = 0;
 let initialY = 0;
+let idleTimer: ReturnType<typeof setTimeout> | null = null;
 
 const clampPosition = () => {
     const frame = layout.state.safeFrame;
@@ -42,10 +53,65 @@ const clampPosition = () => {
 
 const persistPosition = () => {
     settings.setBubblePosition({
-        x: x.value,
-        y: y.value,
+        x: realX,
+        y: realY,
     });
 };
+
+// === 吸边逻辑（仅触屏设备） ===
+const resetIdleTimer = () => {
+    if (!isTouchDevice) return;
+    if (idleTimer) {
+        clearTimeout(idleTimer);
+        idleTimer = null;
+    }
+    if (dragging.value || shell.state.panelOpen) return;
+    idleTimer = setTimeout(() => {
+        if (!dragging.value && !shell.state.panelOpen) {
+            dockBubble();
+        }
+    }, IDLE_TIMEOUT);
+};
+
+let dockedSide: 'left' | 'right' = 'right';
+
+const dockBubble = () => {
+    if (docked.value) return;
+    const frame = layout.state.safeFrame;
+    if (frame.width <= 0) return;
+
+    realX = x.value;
+    realY = y.value;
+
+    const bubbleCenterX = realX + BUBBLE_SIZE / 2;
+    const distToLeft = bubbleCenterX - frame.left;
+    const distToRight = frame.right - bubbleCenterX;
+
+    if (distToLeft <= distToRight) {
+        x.value = frame.left - BUBBLE_SIZE + DOCK_VISIBLE;
+        dockedSide = 'left';
+    } else {
+        x.value = frame.right - DOCK_VISIBLE;
+        dockedSide = 'right';
+    }
+    docked.value = true;
+};
+
+const undockBubble = () => {
+    if (!docked.value) return;
+    const frame = layout.state.safeFrame;
+
+    // 滑到同侧边缘刚好完整露出，不回到原位（避免跑到屏幕中间）
+    if (dockedSide === 'left') {
+        x.value = frame.left + BUBBLE_PADDING;
+    } else {
+        x.value = frame.right - BUBBLE_SIZE - BUBBLE_PADDING;
+    }
+    // y 保持不变（已经是正确的）
+    docked.value = false;
+    resetIdleTimer();
+};
+// === 吸边逻辑结束 ===
 
 watch(
     () => [
@@ -59,13 +125,43 @@ watch(
             const nextPosition = getDefaultPosition();
             x.value = nextPosition.x;
             y.value = nextPosition.y;
+            realX = x.value;
+            realY = y.value;
             return;
         }
 
-        clampPosition();
+        if (!docked.value) {
+            clampPosition();
+            realX = x.value;
+            realY = y.value;
+        }
     },
     { immediate: true },
 );
+
+watch(() => shell.state.panelOpen, (open) => {
+    if (open) {
+        if (docked.value) undockBubble();
+        if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
+    } else {
+        resetIdleTimer();
+    }
+});
+
+// 有新通知时，自动弹出悬浮球，让弹窗在正确位置显示
+watch(() => bubbleBus.state.queue.length, (newLen, oldLen) => {
+    if (newLen > (oldLen ?? 0) && docked.value) {
+        undockBubble();
+    }
+});
+
+onMounted(() => {
+    resetIdleTimer();
+});
+
+onUnmounted(() => {
+    if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
+});
 
 const handleFeedClick = (tabId?: string) => {
     if (!tabId) {
@@ -126,6 +222,8 @@ const feedLayout = computed(() => {
 });
 
 const onPointerDown = (event: PointerEvent) => {
+    if (docked.value) undockBubble();
+
     dragging.value = true;
     startX = event.clientX;
     startY = event.clientY;
@@ -154,16 +252,40 @@ const onPointerUp = (event: PointerEvent) => {
     dragging.value = false;
     const target = event.currentTarget as HTMLElement;
     target.releasePointerCapture(event.pointerId);
+
+    realX = x.value;
+    realY = y.value;
     persistPosition();
+    resetIdleTimer();
 
     if (Math.abs(event.clientX - startX) < 5 && Math.abs(event.clientY - startY) < 5) {
         shell.togglePanel();
     }
 };
+
+const onBubbleEnter = () => {
+    if (docked.value) undockBubble();
+    else resetIdleTimer();
+};
+
+const onBubbleLeave = () => {
+    resetIdleTimer();
+};
+
+const customIconStyle = computed(() => {
+    const icon = settings.state.customBubbleIcon;
+    if (!icon) return {};
+    return {
+        backgroundImage: `url(${icon})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+    };
+});
 </script>
 
 <template>
-  <div class="floating-bubble-container" :style="{ left: `${x}px`, top: `${y}px` }">
+  <div class="floating-bubble-container" :class="{ 'is-docked': docked, 'is-dragging': dragging, 'is-mobile': isTouchDevice }" :style="{ left: `${x}px`, top: `${y}px` }">
     <div class="feed-stream" :class="feedLayout.className" :style="feedLayout.style">
       <transition-group name="feed-slide">
         <div
@@ -197,11 +319,15 @@ const onPointerUp = (event: PointerEvent) => {
 
     <div
       class="bubble-btn"
+      :class="{ 'is-transparent': settings.state.customBubbleBgTransparent && settings.state.customBubbleIcon }"
+      :style="customIconStyle"
       @pointerdown.stop.prevent="onPointerDown"
       @pointermove="onPointerMove"
       @pointerup="onPointerUp"
+      @mouseenter="onBubbleEnter"
+      @mouseleave="onBubbleLeave"
     >
-      <span class="bubble-code-icon">&lt;/&gt;</span>
+      <span class="bubble-code-icon" v-if="!settings.state.customBubbleIcon">&lt;/&gt;</span>
       <span v-if="unreadCount > 0" class="bubble-badge">{{ unreadCount }}</span>
     </div>
   </div>
@@ -214,6 +340,26 @@ const onPointerUp = (event: PointerEvent) => {
     width: 48px;
     height: 48px;
     pointer-events: none;
+    transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                top 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.35s ease;
+}
+
+.floating-bubble-container.is-mobile {
+    width: 40px;
+    height: 40px;
+}
+
+.floating-bubble-container.is-dragging {
+    transition: none;
+}
+
+.floating-bubble-container.is-docked {
+    opacity: 0.35;
+}
+
+.floating-bubble-container.is-docked:hover {
+    opacity: 1;
 }
 
 .feed-stream {
@@ -371,8 +517,8 @@ const onPointerUp = (event: PointerEvent) => {
 }
 
 .bubble-btn {
-    width: 48px;
-    height: 48px;
+    width: 100%;
+    height: 100%;
     background: var(--ttce-bubble-button-bg);
     color: var(--ttce-bubble-button-text);
     border-radius: 50%;
@@ -396,6 +542,11 @@ const onPointerUp = (event: PointerEvent) => {
 .bubble-btn:active {
     transform: scale(0.95);
     background: var(--ttce-bubble-button-active);
+}
+
+.bubble-btn.is-transparent {
+    background-color: transparent !important;
+    box-shadow: none !important;
 }
 
 .bubble-code-icon {

@@ -14,6 +14,12 @@ export const en: Messages = {
     'settings.area.extensionDev': 'Debugging & Logs',
     'settings.area.memoryDev': 'Chat Memory',
     'settings.featureCount': '{n} tool(s)',
+    'settings.customIcon': 'Custom Bubble Icon',
+    'settings.customIconDesc': 'Upload an image to replace the default icon. Uploading a GIF will skip cropping.',
+    'settings.transparentBg': 'Hide Theme Background',
+    'settings.transparentBgDesc': 'When enabled, transparent images will not show the day/night theme background color.',
+    'settings.uploadIcon': 'Upload Image',
+    'settings.removeIcon': 'Restore Default',
 
     // Panel sidebar
     'panel.sidebarTitle': 'Creator Tools',

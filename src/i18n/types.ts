@@ -14,6 +14,12 @@ export interface Messages {
     'settings.area.extensionDev': string;
     'settings.area.memoryDev': string;
     'settings.featureCount': string;
+    'settings.customIcon': string;
+    'settings.customIconDesc': string;
+    'settings.transparentBg': string;
+    'settings.transparentBgDesc': string;
+    'settings.uploadIcon': string;
+    'settings.removeIcon': string;
 
     // Panel sidebar
     'panel.sidebarTitle': string;
