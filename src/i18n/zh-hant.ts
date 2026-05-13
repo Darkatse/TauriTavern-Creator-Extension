@@ -135,5 +135,6 @@ export const zhHant: Messages = {
     // Common
     'common.expandView': '展開檢視',
     'common.close': '關閉',
+    'common.apply': '套用',
     'common.unknownModel': '未知',
 };

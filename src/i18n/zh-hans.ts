@@ -135,5 +135,6 @@ export const zhHans: Messages = {
     // Common
     'common.expandView': '展开查看',
     'common.close': '关闭',
+    'common.apply': '应用',
     'common.unknownModel': '未知',
 };

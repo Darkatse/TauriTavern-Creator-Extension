@@ -1,5 +1,7 @@
 import { reactive } from 'vue';
 
+export const BUBBLE_FEED_VISIBLE_MS = 3000;
+
 export interface BubbleFeedChip {
     label: string;
     tone: 'world-info' | 'world-info-constant' | 'neutral';
@@ -42,7 +44,7 @@ export function createBubbleFeedBus(): BubbleFeedBus {
             clearTimeout(existing);
         }
 
-        const timer = setTimeout(() => remove(id), 3000);
+        const timer = setTimeout(() => remove(id), BUBBLE_FEED_VISIBLE_MS);
         removalTimers.set(id, timer);
     };
 

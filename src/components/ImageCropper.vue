@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { computed, ref, onMounted, watch } from 'vue';
 import type { I18nContext } from '../i18n';
 import type { CreatorAppearanceMode } from '../app/appearance';
 
@@ -17,97 +17,127 @@ const emit = defineEmits<{
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const image = new Image();
 const scale = ref(1);
+const minScale = ref(1);
 const position = ref({ x: 0, y: 0 });
 let isDragging = false;
 let lastPointer = { x: 0, y: 0 };
 let imgWidth = 0;
 let imgHeight = 0;
+let checkerPattern: CanvasPattern | null = null;
 
-// Fixed constants — never dynamically calculated
 const CANVAS_SIZE = 300;
 const CROP_SIZE = 240;
+const OUTPUT_SIZE = 128;
+const CHECKER_TILE_SIZE = 10;
+const MAX_SCALE = 10;
+const WHEEL_ZOOM_STEP = 0.05;
+
+const maxScale = computed(() => Math.max(minScale.value, MAX_SCALE));
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+const clampPositionAndScale = () => {
+    if (!imgWidth || !imgHeight) return;
+
+    scale.value = clamp(scale.value, minScale.value, maxScale.value);
+
+    const maxDx = Math.max(0, (imgWidth * scale.value - CROP_SIZE) / 2);
+    const maxDy = Math.max(0, (imgHeight * scale.value - CROP_SIZE) / 2);
+
+    position.value = {
+        x: clamp(position.value.x, -maxDx, maxDx),
+        y: clamp(position.value.y, -maxDy, maxDy),
+    };
+};
+
+const setScale = (nextScale: number) => {
+    scale.value = nextScale;
+    clampPositionAndScale();
+    draw();
+};
+
+const moveImage = (dx: number, dy: number) => {
+    position.value = {
+        x: position.value.x + dx,
+        y: position.value.y + dy,
+    };
+    clampPositionAndScale();
+    draw();
+};
+
+const getCheckerPattern = (ctx: CanvasRenderingContext2D) => {
+    if (!checkerPattern) {
+        const tile = document.createElement('canvas');
+        tile.width = CHECKER_TILE_SIZE * 2;
+        tile.height = CHECKER_TILE_SIZE * 2;
+
+        const tileCtx = tile.getContext('2d');
+        if (!tileCtx) {
+            throw new Error('Canvas 2D context is unavailable.');
+        }
+
+        tileCtx.fillStyle = '#ffffff';
+        tileCtx.fillRect(0, 0, tile.width, tile.height);
+        tileCtx.fillStyle = '#cccccc';
+        tileCtx.fillRect(0, 0, CHECKER_TILE_SIZE, CHECKER_TILE_SIZE);
+        tileCtx.fillRect(CHECKER_TILE_SIZE, CHECKER_TILE_SIZE, CHECKER_TILE_SIZE, CHECKER_TILE_SIZE);
+
+        checkerPattern = ctx.createPattern(tile, 'repeat');
+        if (!checkerPattern) {
+            throw new Error('Canvas checker pattern is unavailable.');
+        }
+    }
+
+    return checkerPattern;
+};
 
 const draw = () => {
     const canvas = canvasRef.value;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const W = CANVAS_SIZE;
-    const H = CANVAS_SIZE;
-
-    ctx.clearRect(0, 0, W, H);
-
-    // Draw checkerboard transparency pattern
-    const tileSize = 10;
-    for (let y = 0; y < H; y += tileSize) {
-        for (let x = 0; x < W; x += tileSize) {
-            ctx.fillStyle = ((x / tileSize + y / tileSize) % 2 === 0) ? '#cccccc' : '#ffffff';
-            ctx.fillRect(x, y, tileSize, tileSize);
-        }
+    if (!ctx) {
+        throw new Error('Canvas 2D context is unavailable.');
     }
 
+    ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    ctx.fillStyle = getCheckerPattern(ctx);
+    ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
     ctx.save();
-    ctx.translate(W / 2, H / 2);
+    ctx.translate(CANVAS_SIZE / 2, CANVAS_SIZE / 2);
     ctx.translate(position.value.x, position.value.y);
     ctx.scale(scale.value, scale.value);
     ctx.drawImage(image, -imgWidth / 2, -imgHeight / 2, imgWidth, imgHeight);
     ctx.restore();
 
-    // Draw mask — semi-transparent outside the circle
     ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
     ctx.beginPath();
-    ctx.rect(0, 0, W, H);
-    ctx.arc(W / 2, H / 2, CROP_SIZE / 2, 0, Math.PI * 2, true);
+    ctx.rect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    ctx.arc(CANVAS_SIZE / 2, CANVAS_SIZE / 2, CROP_SIZE / 2, 0, Math.PI * 2, true);
     ctx.fill();
 
-    // Draw circle border
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(W / 2, H / 2, CROP_SIZE / 2, 0, Math.PI * 2);
+    ctx.arc(CANVAS_SIZE / 2, CANVAS_SIZE / 2, CROP_SIZE / 2, 0, Math.PI * 2);
     ctx.stroke();
 };
 
 const initImage = () => {
     image.src = props.imageUrl;
     image.onload = () => {
-        imgWidth = image.width;
-        imgHeight = image.height;
+        imgWidth = image.naturalWidth;
+        imgHeight = image.naturalHeight;
 
-        // Scale to cover the crop circle
         const scaleX = CROP_SIZE / imgWidth;
         const scaleY = CROP_SIZE / imgHeight;
-        scale.value = Math.max(scaleX, scaleY);
+        minScale.value = Math.max(scaleX, scaleY);
+        scale.value = minScale.value;
         position.value = { x: 0, y: 0 };
         draw();
     };
 };
 
-const clampPositionAndScale = () => {
-    const minScaleX = CROP_SIZE / imgWidth;
-    const minScaleY = CROP_SIZE / imgHeight;
-    const minScale = Math.max(minScaleX, minScaleY);
-
-    if (scale.value < minScale) {
-        scale.value = minScale;
-    }
-
-    const maxDx = (imgWidth * scale.value - CROP_SIZE) / 2;
-    const maxDy = (imgHeight * scale.value - CROP_SIZE) / 2;
-
-    if (position.value.x > maxDx) position.value.x = maxDx;
-    if (position.value.x < -maxDx) position.value.x = -maxDx;
-
-    if (position.value.y > maxDy) position.value.y = maxDy;
-    if (position.value.y < -maxDy) position.value.y = -maxDy;
-};
-
 watch(() => props.imageUrl, initImage);
-watch(scale, () => {
-    clampPositionAndScale();
-    draw();
-});
 
 onMounted(() => {
     initImage();
@@ -145,18 +175,12 @@ const onPointerMove = (e: PointerEvent) => {
     if (activePointers.size === 1 && isDragging) {
         const dx = e.clientX - lastPointer.x;
         const dy = e.clientY - lastPointer.y;
-        position.value.x += dx / scale.value;
-        position.value.y += dy / scale.value;
         lastPointer = { x: e.clientX, y: e.clientY };
-        clampPositionAndScale();
-        draw();
+        moveImage(dx, dy);
     } else if (activePointers.size === 2) {
         const currentDistance = getPinchDistance();
         if (initialPinchDistance > 0) {
-            scale.value = initialPinchScale * (currentDistance / initialPinchDistance);
-            if (scale.value < 0.1) scale.value = 0.1;
-            if (scale.value > 10) scale.value = 10;
-            clampPositionAndScale();
+            setScale(initialPinchScale * (currentDistance / initialPinchDistance));
         }
     }
 };
@@ -177,22 +201,22 @@ const onPointerUp = (e: PointerEvent) => {
 };
 
 const onWheel = (e: WheelEvent) => {
-    e.preventDefault();
-    const zoomIntensity = 0.05;
-    if (e.deltaY < 0) {
-        scale.value *= (1 + zoomIntensity);
-    } else {
-        scale.value /= (1 + zoomIntensity);
-    }
-    clampPositionAndScale();
+    const factor = e.deltaY < 0 ? 1 + WHEEL_ZOOM_STEP : 1 / (1 + WHEEL_ZOOM_STEP);
+    setScale(scale.value * factor);
+};
+
+const onScaleInput = (e: Event) => {
+    setScale(Number((e.target as HTMLInputElement).value));
 };
 
 const confirmCrop = () => {
     const outCanvas = document.createElement('canvas');
-    outCanvas.width = 128;
-    outCanvas.height = 128;
+    outCanvas.width = OUTPUT_SIZE;
+    outCanvas.height = OUTPUT_SIZE;
     const ctx = outCanvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+        throw new Error('Canvas 2D context is unavailable.');
+    }
 
     ctx.save();
     ctx.translate(outCanvas.width / 2, outCanvas.height / 2);
@@ -232,12 +256,20 @@ const confirmCrop = () => {
         </div>
         <div class="controls">
           <span class="icon">🔍-</span>
-          <input type="range" min="0.1" max="5" step="0.01" v-model.number="scale" class="scale-slider" />
+          <input
+            type="range"
+            :min="minScale"
+            :max="maxScale"
+            step="0.01"
+            :value="scale"
+            class="scale-slider"
+            @input="onScaleInput"
+          />
           <span class="icon">🔍+</span>
         </div>
         <footer class="cropper-footer">
           <button class="btn-cancel" @click="emit('cancel')">{{ props.i18n.t('common.close') }}</button>
-          <button class="btn-confirm" @click="confirmCrop">{{ props.i18n.t('llmApi.apply') }}</button>
+          <button class="btn-confirm" @click="confirmCrop">{{ props.i18n.t('common.apply') }}</button>
         </footer>
       </div>
     </div>
@@ -248,7 +280,7 @@ const confirmCrop = () => {
 .cropper-root {
     position: fixed;
     inset: 0;
-    z-index: 2147483647;
+    z-index: 100000;
     pointer-events: none;
 }
 

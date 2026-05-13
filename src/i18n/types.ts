@@ -135,5 +135,6 @@ export interface Messages {
     // Common
     'common.expandView': string;
     'common.close': string;
+    'common.apply': string;
     'common.unknownModel': string;
 }

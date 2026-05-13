@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
 import { useCreatorApp } from '../../app/context';
+import { BUBBLE_FEED_VISIBLE_MS } from './bubble-feed-bus';
 
 const { bubbleBus, layout, settings, shell } = useCreatorApp();
 
@@ -40,6 +41,13 @@ let initialX = 0;
 let initialY = 0;
 let idleTimer: ReturnType<typeof setTimeout> | null = null;
 
+const clearIdleTimer = () => {
+    if (idleTimer) {
+        clearTimeout(idleTimer);
+        idleTimer = null;
+    }
+};
+
 const clampPosition = () => {
     const frame = layout.state.safeFrame;
     const minX = frame.left + BUBBLE_PADDING;
@@ -59,18 +67,15 @@ const persistPosition = () => {
 };
 
 // === 吸边逻辑（仅触屏设备） ===
-const resetIdleTimer = () => {
+const scheduleDock = (delayMs = IDLE_TIMEOUT) => {
     if (!isTouchDevice) return;
-    if (idleTimer) {
-        clearTimeout(idleTimer);
-        idleTimer = null;
-    }
+    clearIdleTimer();
     if (dragging.value || shell.state.panelOpen) return;
     idleTimer = setTimeout(() => {
         if (!dragging.value && !shell.state.panelOpen) {
             dockBubble();
         }
-    }, IDLE_TIMEOUT);
+    }, delayMs);
 };
 
 let dockedSide: 'left' | 'right' = 'right';
@@ -97,7 +102,7 @@ const dockBubble = () => {
     docked.value = true;
 };
 
-const undockBubble = () => {
+const undockBubble = (scheduleIdle = true) => {
     if (!docked.value) return;
     const frame = layout.state.safeFrame;
 
@@ -109,7 +114,17 @@ const undockBubble = () => {
     }
     // y 保持不变（已经是正确的）
     docked.value = false;
-    resetIdleTimer();
+    if (scheduleIdle) {
+        scheduleDock();
+    }
+};
+
+const revealForFeed = () => {
+    if (!isTouchDevice || shell.state.panelOpen) return;
+    if (docked.value) {
+        undockBubble(false);
+    }
+    scheduleDock(BUBBLE_FEED_VISIBLE_MS);
 };
 // === 吸边逻辑结束 ===
 
@@ -141,26 +156,26 @@ watch(
 
 watch(() => shell.state.panelOpen, (open) => {
     if (open) {
-        if (docked.value) undockBubble();
-        if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
+        if (docked.value) undockBubble(false);
+        clearIdleTimer();
     } else {
-        resetIdleTimer();
+        scheduleDock();
     }
 });
 
 // 有新通知时，自动弹出悬浮球，让弹窗在正确位置显示
-watch(() => bubbleBus.state.queue.length, (newLen, oldLen) => {
-    if (newLen > (oldLen ?? 0) && docked.value) {
-        undockBubble();
+watch(() => bubbleBus.state.unreadCount, (newCount, oldCount) => {
+    if (newCount > (oldCount ?? 0)) {
+        revealForFeed();
     }
 });
 
 onMounted(() => {
-    resetIdleTimer();
+    scheduleDock();
 });
 
 onUnmounted(() => {
-    if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
+    clearIdleTimer();
 });
 
 const handleFeedClick = (tabId?: string) => {
@@ -222,7 +237,7 @@ const feedLayout = computed(() => {
 });
 
 const onPointerDown = (event: PointerEvent) => {
-    if (docked.value) undockBubble();
+    if (docked.value) undockBubble(false);
 
     dragging.value = true;
     startX = event.clientX;
@@ -256,7 +271,7 @@ const onPointerUp = (event: PointerEvent) => {
     realX = x.value;
     realY = y.value;
     persistPosition();
-    resetIdleTimer();
+    scheduleDock();
 
     if (Math.abs(event.clientX - startX) < 5 && Math.abs(event.clientY - startY) < 5) {
         shell.togglePanel();
@@ -265,11 +280,11 @@ const onPointerUp = (event: PointerEvent) => {
 
 const onBubbleEnter = () => {
     if (docked.value) undockBubble();
-    else resetIdleTimer();
+    else scheduleDock();
 };
 
 const onBubbleLeave = () => {
-    resetIdleTimer();
+    scheduleDock();
 };
 
 const customIconStyle = computed(() => {

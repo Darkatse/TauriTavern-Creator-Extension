@@ -135,5 +135,6 @@ export const en: Messages = {
     // Common
     'common.expandView': 'Expand view',
     'common.close': 'Close',
+    'common.apply': 'Apply',
     'common.unknownModel': 'Unknown',
 };
